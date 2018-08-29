@@ -53,36 +53,27 @@ public class Practica1 {
                    practica1.analizarComentario(guardarLinea);//aqui  se manda llamar el metodo
                    break;
                case 32://Caso para cuando la linea comienza con espacios 
-                   practica1.recorrerEspacios(arregloCodigos, guardarLinea, posCodigo);                   
+                   practica1.recorrerEspacios(arregloCodigos, guardarLinea, posCodigo);   
+                   practica1.imprimir(arregloCodigos);
                    break;
                case 9://Caso para cuando la linea comienza con tabuladores
                    practica1.recorrerEspacios(arregloCodigos, guardarLinea, posCodigo);
+                   practica1.imprimir(arregloCodigos);
                    break;                                                  
                case 0://Caso para cuando la linea solo es espacios y/o tabuladores con un enter
                    opcion = 59;//Asignacion para controlar que no se imprima nadaya que no existen instrucciones
                    break;
                default://El caso por default es cuando la linea comienza con cualquier caracter que no sea espacio o tabulador
                    practica1.etiqueta(arregloCodigos, guardarLinea, posCodigo);
+                   practica1.imprimir(arregloCodigos);
                    break;
            }//Fin del switch
             
-           
-           if(opcion!=59){//if para no imprimir las tres instrucciones cuando sea un comentario    
-                
-                if(arregloCodigos[1]==null){//if para mandar un error en caso de que no haya CODOP
-                    System.out.println("¡ERROR! No hay codigo de operacion");
-                }//fin del if
-                else{
-                if(arregloCodigos[1].toLowerCase().equals("end") && arregloCodigos[0]!=null){
-                    System.out.println("ERROR en la ultima linea no se agrega etiqueta");
-                }//fin del if
-                
-                System.out.println("\nEtiqueta:"+arregloCodigos[0]);
-                System.out.println("CODOP:"+arregloCodigos[1]);
-                System.out.println("Operando:"+arregloCodigos[2]+"\n");
-                }//Fin del else
-            }//fin del if    
-           
+            //If que hara salir del ciclo si se encontro la palabra end
+            if(practica1.comparar(arregloCodigos, "end", 1)==true){
+                break;
+            }//Fin del if para salir del ciclo
+                                
         }//fin del if que condiciona e ignora el que haya un salto de linea
         
            practica1.limpiarArreglo(arregloCodigos);//Instruccion para limpiar el arreglo
@@ -95,6 +86,34 @@ public class Practica1 {
     
     
     
+    /**
+     * 
+     * @param codigos
+     * @param x
+     * @param posicion
+     * @return 
+     */
+    public boolean comparar(String[] codigos, String x, int posicion){
+        if(codigos[posicion]!=null && codigos[posicion].toLowerCase().equals(x)){
+            return true;
+        }else{
+            return false;
+        }//Fin del if else para saber si el objeto es igual o no
+    }//Fin del método comparar
+    /**
+     * Método para mandar imprimir lo que contiene el arreglo
+     * @param codigos 
+     */
+    public void imprimir(String[] codigos){
+        if(codigos[1].equals(null)){
+            System.out.println("!!!Error¡¡¡ No hay codigo de operacion");
+        }//Fin del if que revisa y manda un mensaje si no hay codigo de operacion
+        
+            //Instrucciones para imprimir lo que se pide
+            System.out.println("\nEtiqueta:"+codigos[0]);
+            System.out.println("CODOP:"+codigos[1]);
+            System.out.println("Operando:"+codigos[2]+"\n");
+    }//Fin del método para imprimir
     /**
      * 
      * @param revision
