@@ -28,6 +28,7 @@ public class Practica1 {
        //Instrucciones para abrir el archivo
        File archivo = new File("P1ASM.txt");
        
+       //Hola perros 
        
        //if para buscar si el archivo existe
        if((archivo.exists())!=true){
