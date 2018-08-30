@@ -283,15 +283,11 @@ public class Practica1 {
                         return;
                     }//Fin del if                 
                             
-                    if((lineaArchivo.length()-1)==i){//if para concatenar la cadena completa que cuando esta sea la utlima de la linea
-                        System.out.println("Entro aqui porque es el fin de la linea");
-                        //System.out.println("Posicion del codigo"+posCodigo);
-                        codigoOperacion += lineaArchivo.substring(i); 
+                    if((lineaArchivo.length()-1)==i && lineaArchivo.codePointAt(i)!=32 && lineaArchivo.codePointAt(i)!=9){//if para concatenar la cadena completa que cuando esta sea la utlima de la linea                        
+                        codigoOperacion += lineaArchivo.substring(i, i+1);                         
                         codigos[posCodigo] = codigoOperacion;//Se almacena el codigo de operacion en el arreglo                        
                     }//Fin del if para 
-                    else{
-                        System.out.println("Entro aqui porque aun hay algo en la linea");
-                        //System.out.println("Posicion del codigo"+posCodigo);
+                    else{                                           
                         codigos[posCodigo] = codigoOperacion;//Se almacena el codigo de operacion en el arreglo
                         reducirLinea = lineaArchivo.substring(i);//Asignacion de lo que resta de la cadena una vez leido el codigo de operacion                    
                         recorrerEspacios(codigos, reducirLinea, posCodigo);//Se manda llamar el método de recorrer espacios en caso de que no haya sido el final de linea                                               
