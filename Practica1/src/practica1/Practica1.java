@@ -304,10 +304,9 @@ public class Practica1 {
                     //If para identificar si el el CODOP tiene un caracter que no sea una letra o punto
                     if((lineaArchivo.codePointAt(i) < 65 || lineaArchivo.codePointAt(i) > 90) && (lineaArchivo.codePointAt(i) < 97 || lineaArchivo.codePointAt(i) > 122) && lineaArchivo.codePointAt(i)!=46){
                         caracterDistinto++;
-                    }//Fin del if
-                                        
-                                        
+                    }//Fin del if                                                                                
             }//Fin del for            
+            
     }//Fin del método que detecta codigos de operacion
     /**
      * 
