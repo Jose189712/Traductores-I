@@ -104,14 +104,15 @@ public class Practica1 {
      * @param codigos 
      */
     public void imprimir(String[] codigos){
-        if(codigos[1].equals(null)){
-            System.out.println("!!!Error¡¡¡ No hay codigo de operacion");
+        if(codigos[1].equals("null")){
+            System.out.println("!!!Error¡¡¡ No tiene codigo de operacion o contiene un error");
         }//Fin del if que revisa y manda un mensaje si no hay codigo de operacion
-        
+        else{
             //Instrucciones para imprimir lo que se pide
             System.out.println("\nEtiqueta:"+codigos[0]);
             System.out.println("CODOP:"+codigos[1]);
             System.out.println("Operando:"+codigos[2]+"\n");
+        }//fin del else
     }//Fin del método para imprimir
     /**
      * 
@@ -133,7 +134,7 @@ public class Practica1 {
      */
     public void limpiarArreglo(String[] codigos){        
         for(int i = 0; i<codigos.length; i++){
-            codigos[i] = null;
+            codigos[i] = "null";
         }//fin del for
     }//fin del método    
     //MÉTODOS QUE REPRESENTAN EL AUTOMATA
@@ -250,43 +251,50 @@ public class Practica1 {
        int Npuntos=0, caracterDistinto=0;
         int primerLetra = lineaArchivo.codePointAt(0); 
         String codigoOperacion="", reducirLinea;
-        
-            //If para saber si el caracter es una letra mayuscula o minuscula
-            if((primerLetra < 65 || primerLetra > 90) && (primerLetra < 97 || primerLetra > 122)){
-                System.out.println("El caracter inicial del codigo de opercaion es incorrecto");
-            }//Fin del if                 
-            
+                                               
             for(int i = 0; i<lineaArchivo.length(); i++){                 
                 //if para salir del programa cuando se haya detectado la palabra "END"
                 if(codigoOperacion.toLowerCase().equals("end")){                                                               
                         codigos[posCodigo]=codigoOperacion;                        
                         return;
-                    }//fin del if de palabra end
-                
-                if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1)==i){//If para revisar si ya se termino la palabra que corresponde al CODOP
+                    }//fin del if de palabra end                                
                     
-                    if(Npuntos>1){//If para mandar un mensaje si se excedio del numero de puntos
+                if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1)==i){//If para revisar si ya se termino la palabra que corresponde al CODOP                    
+                                                                               
+                    //If para saber si el caracter es una letra mayuscula o minuscula
+                    if((primerLetra < 65 || primerLetra > 90) && (primerLetra < 97 || primerLetra > 122)){
+                        System.out.println("El caracter inicial del codigo de opercaion es incorrecto");
+                        // codigos[posCodigo] = "null";
+                        return;//Instruccion para salir del método ya que no tiene caso buscarlo en el tabop porque no se encontrara
+                    }//Fin del if 
+                    
+                    else if(Npuntos>1){//If para mandar un mensaje si se excedio del numero de puntos
                         System.out.println("Codigo de operacion incorrecto por exceso de puntos");
+                        return;
                     }//Fin del if que condiciona el numero de puntos                    
                     
-                    if(caracterDistinto!=0){//if para mandar un mensaje si existe un caracter diferente a una letra o un punto
+                    else if(caracterDistinto!=0){//if para mandar un mensaje si existe un caracter diferente a una letra o un punto
                         System.out.println("A ingresado un caracter incorrecto en el codigo de operacion");
+                        return;
                     }//Fin del if
                     
-                    if(codigoOperacion.length()>5){//if para saber si se excedio del limite de caracteres
+                    else if(codigoOperacion.length()>5){//if para saber si se excedio del limite de caracteres
                         System.out.println("Se excedio en los caracteres del codigo de operacion"); 
+                        return;
                     }//Fin del if                 
-                    
+                            
                     if((lineaArchivo.length()-1)==i){//if para concatenar la cadena completa que cuando esta sea la utlima de la linea
-                        codigoOperacion += lineaArchivo.substring(i);
+                        System.out.println("Entro aqui porque es el fin de la linea");
+                        codigoOperacion += lineaArchivo.substring(i); 
+                        codigos[posCodigo] = codigoOperacion;//Se almacena el codigo de operacion en el arreglo                        
                     }//Fin del if para 
                     else{
-                        reducirLinea = lineaArchivo.substring(i);//Asignacion de lo que resta de la cadena una vez leido el codigo de operacion                    
-                        recorrerEspacios(codigos, reducirLinea, posCodigo);//Se manda llamar el método de recorrer espacios en caso de que no haya sido el final de linea
-                    }//fin del else para no llamar el metodo de recorrer espacios en caso de que sea el final de la linea
-                    
+                        System.out.println("Entro aqui porque aun hay algo en la linea");
                         codigos[posCodigo] = codigoOperacion;//Se almacena el codigo de operacion en el arreglo
-                    break;
+                        reducirLinea = lineaArchivo.substring(i);//Asignacion de lo que resta de la cadena una vez leido el codigo de operacion                    
+                        recorrerEspacios(codigos, reducirLinea, posCodigo);//Se manda llamar el método de recorrer espacios en caso de que no haya sido el final de linea                                               
+                    }//fin del else para no llamar el metodo de recorrer espacios en caso de que sea el final de la linea
+                  break;                                 
                 }//Fin del if
                     
                     codigoOperacion += lineaArchivo.substring(i, i+1);//Instrucciones para ir concatenando la cadena correspondiente a codigo de operacion
@@ -299,7 +307,8 @@ public class Practica1 {
                     if((lineaArchivo.codePointAt(i) < 65 || lineaArchivo.codePointAt(i) > 90) && (lineaArchivo.codePointAt(i) < 97 || lineaArchivo.codePointAt(i) > 122) && lineaArchivo.codePointAt(i)!=46){
                         caracterDistinto++;
                     }//Fin del if
-                    
+                                        
+                                        
             }//Fin del for            
     }//Fin del método que detecta codigos de operacion
     /**
