@@ -27,9 +27,7 @@ public class Practica1 {
        int posCodigo=0,Nlinea=0;       
        //Instrucciones para abrir el archivo
        File archivo = new File("P1ASM.txt");
-       
-       //Hola perros 
-       
+                    
        //if para buscar si el archivo existe
        if((archivo.exists())!=true){
            System.out.println("El archivo no existe");
