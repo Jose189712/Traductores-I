@@ -38,7 +38,7 @@ public class Practica1 {
                      
        while((guardarLinea = asm.readLine())!=null){                //While para leer linea por linea
            Nlinea++;//Contador para conocer el numero de linea en el que estamos
-        
+         practica1.limpiarArreglo(arregloCodigos);//Instruccion para limpiar el arreglo
            if(guardarLinea.length()>0){//if para ignorar los saltos de linea sin instrucciones   
                
               if((opcion=practica1.leerCadena(guardarLinea))!=0){//if para ignorar los saltos de linea pero que tengan espacios o tabuladores                        
@@ -47,6 +47,8 @@ public class Practica1 {
                 System.out.println("Linea: "+Nlinea);//Imprimir el numero de en que se encuentra          
               }//fin del if 
             
+              
+               
             switch(opcion){         //switch el cual representa el estado inicial de un automata                     
                case 59:// Caso para comentarios si la linea comienza con un ;
                    practica1.analizarComentario(guardarLinea);//aqui  se manda llamar el metodo
@@ -63,7 +65,7 @@ public class Practica1 {
                    opcion = 59;//Asignacion para controlar que no se imprima nadaya que no existen instrucciones
                    break;
                default://El caso por default es cuando la linea comienza con cualquier caracter que no sea espacio o tabulador
-                   practica1.etiqueta(arregloCodigos, guardarLinea, posCodigo);
+                   practica1.etiqueta(arregloCodigos, guardarLinea, posCodigo);                   
                    practica1.imprimir(arregloCodigos);
                    break;
            }//Fin del switch
@@ -73,10 +75,8 @@ public class Practica1 {
                 break;
             }//Fin del if para salir del ciclo
                                 
-        }//fin del if que condiciona e ignora el que haya un salto de linea
-        
-           practica1.limpiarArreglo(arregloCodigos);//Instruccion para limpiar el arreglo
-           
+        }//fin del if que condiciona e ignora el que haya un salto de linea                   
+          
        }//Fin del while
             practica.close();//Instruccion para cerrar el archivo
        }//fin del if else para saber si el archivo existe
@@ -103,7 +103,7 @@ public class Practica1 {
      * Método para mandar imprimir lo que contiene el arreglo
      * @param codigos 
      */
-    public void imprimir(String[] codigos){
+    public void imprimir(String[] codigos){        
         if(codigos[1].equals("null")){
             System.out.println("!!!Error¡¡¡ No tiene codigo de operacion o contiene un error");
         }//Fin del if que revisa y manda un mensaje si no hay codigo de operacion
@@ -260,7 +260,7 @@ public class Practica1 {
                     }//fin del if de palabra end                                
                     
                 if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1)==i){//If para revisar si ya se termino la palabra que corresponde al CODOP                    
-                                                                               
+                                   System.out.println("Entrada");                                            
                     //If para saber si el caracter es una letra mayuscula o minuscula
                     if((primerLetra < 65 || primerLetra > 90) && (primerLetra < 97 || primerLetra > 122)){
                         System.out.println("El caracter inicial del codigo de opercaion es incorrecto");
@@ -285,11 +285,13 @@ public class Practica1 {
                             
                     if((lineaArchivo.length()-1)==i){//if para concatenar la cadena completa que cuando esta sea la utlima de la linea
                         System.out.println("Entro aqui porque es el fin de la linea");
+                        //System.out.println("Posicion del codigo"+posCodigo);
                         codigoOperacion += lineaArchivo.substring(i); 
                         codigos[posCodigo] = codigoOperacion;//Se almacena el codigo de operacion en el arreglo                        
                     }//Fin del if para 
                     else{
                         System.out.println("Entro aqui porque aun hay algo en la linea");
+                        //System.out.println("Posicion del codigo"+posCodigo);
                         codigos[posCodigo] = codigoOperacion;//Se almacena el codigo de operacion en el arreglo
                         reducirLinea = lineaArchivo.substring(i);//Asignacion de lo que resta de la cadena una vez leido el codigo de operacion                    
                         recorrerEspacios(codigos, reducirLinea, posCodigo);//Se manda llamar el método de recorrer espacios en caso de que no haya sido el final de linea                                               
