@@ -1,6 +1,6 @@
 ;comentario número 1 =SEMINARIO=
 	 	ORG  	%00001111
-ET1	eq1u	$ffFF
+ET1	equ	$ffFF
 dos 		LDDA	@4732
 		SWI
 		DS.b	  	%0011000011111100
