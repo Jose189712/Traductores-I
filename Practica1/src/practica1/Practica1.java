@@ -69,7 +69,7 @@ public class Practica1 {
                    practica1.imprimir(arregloCodigos);
                    break;
            }//Fin del switch
-            
+              
             //If que hara salir del ciclo si se encontro la palabra end
             if(practica1.comparar(arregloCodigos, "end", 1)==true){
                 break;
@@ -260,27 +260,27 @@ public class Practica1 {
                     }//fin del if de palabra end                                
                     
                 if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1)==i){//If para revisar si ya se termino la palabra que corresponde al CODOP                    
-                                   System.out.println("Entrada");                                            
+                    
                     //If para saber si el caracter es una letra mayuscula o minuscula
                     if((primerLetra < 65 || primerLetra > 90) && (primerLetra < 97 || primerLetra > 122)){
                         System.out.println("El caracter inicial del codigo de opercaion es incorrecto");
                         // codigos[posCodigo] = "null";
-                        return;//Instruccion para salir del método ya que no tiene caso buscarlo en el tabop porque no se encontrara
+                        break;//Instruccion para salir del método ya que no tiene caso buscarlo en el tabop porque no se encontrara
                     }//Fin del if 
                     
                     else if(Npuntos>1){//If para mandar un mensaje si se excedio del numero de puntos
                         System.out.println("Codigo de operacion incorrecto por exceso de puntos");
-                        return;
+                        break;
                     }//Fin del if que condiciona el numero de puntos                    
                     
                     else if(caracterDistinto!=0){//if para mandar un mensaje si existe un caracter diferente a una letra o un punto
                         System.out.println("A ingresado un caracter incorrecto en el codigo de operacion");
-                        return;
+                        break;
                     }//Fin del if
                     
                     else if(codigoOperacion.length()>5){//if para saber si se excedio del limite de caracteres
                         System.out.println("Se excedio en los caracteres del codigo de operacion"); 
-                        return;
+                        break;
                     }//Fin del if                 
                             
                     if((lineaArchivo.length()-1)==i && lineaArchivo.codePointAt(i)!=32 && lineaArchivo.codePointAt(i)!=9){//if para concatenar la cadena completa que cuando esta sea la utlima de la linea                        
