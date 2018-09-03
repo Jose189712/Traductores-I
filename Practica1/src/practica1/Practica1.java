@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 /**
  *Jose Rodriguez Sanchez
@@ -19,27 +21,40 @@ public class Practica1 {
 
     int Nlinea=0;//Variable global para saber en que linea vamos
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        //DECLARACION DE VARIABLES
+       long inicio = System.nanoTime();
+       //DECLARACION DE VARIABLES
        String[] arregloCodigos = new String[3];//Arreglo para guardar los 3 codigos ETIQUETA-CODOPS-OPERANDOS  
+       ArrayList<String[]> auxTabop = new ArrayList<String[]>();
        int opcion=59;//Varaible para las opciones del switch
        String guardarLinea;//String para guardar cada linea
        Practica1 practica1 = new Practica1();//objeto de la clase, para instanciar y mandar llamar metodos de la misma clase
-       int posCodigo=0,Nlinea=0;       
+       int posCodigo=0,Nlinea=0,busqueda;//Variable busqueda -1 si no encontro el dato, 1 si se encontro el dato
+       
        //Instrucciones para abrir el archivo
-       File archivo = new File("P1ASM.txt");
-                    
+       File archivo = new File("P2ASM.txt");
+       File archivo1 = new File("Tabop.txt");
+       
        //if para buscar si el archivo existe
        if((archivo.exists())!=true){
            System.out.println("El archivo no existe");
        }else{
+           
             //Instrucciones para manejar el contenido del archivo
             FileReader practica = new FileReader(archivo);
             BufferedReader asm = new BufferedReader(practica);
-                     
+            
+            /*Bloque de instrucciones para cargar las instrucciones del tabop*/
+            FileReader instruccion = new FileReader(archivo1);
+            BufferedReader asm1 = new BufferedReader(instruccion);
+            auxTabop=practica1.almacenarTabop(asm1);
+            instruccion.close();
+            /*Termino del bloque para para cargar el tabop*/
+                                             
        while((guardarLinea = asm.readLine())!=null){                //While para leer linea por linea
            Nlinea++;//Contador para conocer el numero de linea en el que estamos
          practica1.limpiarArreglo(arregloCodigos);//Instruccion para limpiar el arreglo
-           if(guardarLinea.length()>0){//if para ignorar los saltos de linea sin instrucciones   
+           
+         if(guardarLinea.length()>0){//if para ignorar los saltos de linea sin instrucciones   
                
               if((opcion=practica1.leerCadena(guardarLinea))!=0){//if para ignorar los saltos de linea pero que tengan espacios o tabuladores                        
                 opcion = guardarLinea.codePointAt(0);//Se obtiene el identificador en codigo ascii del primer caracter
@@ -74,19 +89,39 @@ public class Practica1 {
             if(practica1.comparar(arregloCodigos, "end", 1)==true){
                 break;
             }//Fin del if para salir del ciclo
-                                
+            
+            //if hara que busque el codigo o no
+            if(arregloCodigos[1]!= "null"){
+                
+                if((busqueda = practica1.buscarCodop(auxTabop, arregloCodigos[1]))>=0){//If en el que entra si se encontro el codigo de operacion                    
+                    
+                    if(practica1.operandoORNOToperando(auxTabop, busqueda, arregloCodigos)==true){
+                        System.out.println("\nCODOP\tOperando\tModo\tCodigo Maquina\tB Calcular\tB Totales");
+                        System.out.println(auxTabop.get(busqueda)[0]+"\t"+auxTabop.get(busqueda)[1]+"\t\t"+auxTabop.get(busqueda)[2]+"\t\t"
+                                +auxTabop.get(busqueda)[3]+"\t\t"+auxTabop.get(busqueda)[4]+"\t\t"+auxTabop.get(busqueda)[5]+"\n");
+                    }//Fin del if
+                
+                }else{
+                    System.out.println("¡¡¡ERROR!!!  Ha ingresado un codigo que no esta en el tabop");
+                }//Fin del if else
+            }//fin del if 
+            
         }//fin del if que condiciona e ignora el que haya un salto de linea                   
           
        }//Fin del while
             practica.close();//Instruccion para cerrar el archivo
-       }//fin del if else para saber si el archivo existe
+     }//fin del if else para saber si el archivo existe
+       long fin = System.nanoTime();
+       double dif = (double)(fin-inicio) * 1.0e-9;
+        System.out.println("El programa dura "+dif+" segundos");
     }//Fin del main
     
     
     
-    
+    /*----------------------------------------------------------------------------------------------------------------------------------*/
+    //                              PRACTICA #1
     /**
-     * 
+     * Método para comparar un codigo de un arreglo contra otro mandado como String
      * @param codigos
      * @param x
      * @param posicion
@@ -337,4 +372,70 @@ public class Practica1 {
         
     }//Fin del método que detecta el operando de la linea
     
+    /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    //              |           PRACTICA #2
+    
+    
+    /**
+     * 
+     * @param tabop
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
+    protected ArrayList<String[]> almacenarTabop(BufferedReader tabop) throws FileNotFoundException, IOException{                
+        //DECALARACION DE LAS ESTRUCTURAS DE DATOS        
+        ArrayList<String[]> auxTabop = new ArrayList<String[]>();
+        String palabra;   //Variable para guardar dato por dato
+        int posicion = 0;   //Variable para acomodar los datos en el arreglo 
+        
+        while((palabra = tabop.readLine())!=null){
+            StringTokenizer token = new StringTokenizer(palabra);//Declaracion del objeto para identificar los tokens 
+            String[] datos = new String[6];
+            for(int i = 0; i<6; i++){
+                datos[i] = token.nextToken();                
+            }//Fin del while para separar la linea 
+            auxTabop.add(datos);                       
+        }//Fin del while que nos permite leer linea por linea el archivo        
+        return auxTabop;
+    }//fin del método para llenar el arraylist con lo datos dados en el archivo tabop        
+    
+    /**
+     * 
+     * @param tabop
+     * @param codigo
+     * @return 
+     * Este es nuestro metodod buscador, usado para idetinficar el tabop
+     */
+    public int buscarCodop(ArrayList<String[]> tabop, String codigo){   
+        
+        for(int i = 0; i<tabop.size(); i++){   //Este for va recorriendo por linea
+            if(tabop.get(i)[0].equals(codigo)){   //ESte if compara lo de la 1° posicion con el codigo
+                return i;                    //Regresa en que posicion se lo encontro
+            }//fin del if 
+        }//fin del for 
+        
+        return -1;    //Si no lo encontro regresa 0
+        
+    }//Fin del método para buscar el codop
+    /**
+     * 
+     * @param tabop
+     * @param posicion
+     * @param codigos
+     * @return 
+     */
+    public boolean operandoORNOToperando(ArrayList<String[]> tabop, int posicion, String[] codigos){
+        if(tabop.get(posicion)[1].equals("1") && codigos[2]!="null"){            
+            return true;
+        }else if(tabop.get(posicion)[1].equals("0") && codigos[2]=="null"){
+            return true;
+        }else if(tabop.get(posicion)[1].equals("0") && codigos[2]!="null"){
+            System.out.println("¡¡¡ERROR!!! Esta instruccion no lleva operando");
+            return false;
+        }else{
+            System.out.println("¡¡¡ERROR!!! Esta instruccion si lleva operando");
+            return false;
+        }//Fin del if else if
+    }//Fin del método 
 }//Fin de la clase practica 1

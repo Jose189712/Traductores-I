@@ -1,0 +1,9 @@
+		ORG    $AB
+ET1	 	SWI
+		ADCA 	1,X
+		BRA	ET1
+
+ET2	ANDA  %10010101
+	
+ BCC		@73641
+		END 	%101010101
