@@ -1,0 +1,29 @@
+		ORG    $AB
+  	SWI
+	EORA 	5
+	EORA 	@5
+	EORA %111
+	EORA  $6
+	EORA 300
+	EORA $FFF
+	EORA    #5
+	EORA 	#@5
+	EORA	#%1111
+	EORA 	1,x
+	EORA 	255,X
+	EORA  32768,X
+	EORA 10,+PC
+	EORA a,X
+	EORA 254,X
+	EORA 64444,X
+	EORA [1,X]
+	EORA [6444,X]
+	EORA [d,X]
+	BLT UNO_1
+	LBLT DOS
+	INX
+ LDY #$20
+ LDX	$-055
+
+
+	END
