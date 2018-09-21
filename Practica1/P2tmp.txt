@@ -1,0 +1,17 @@
+000f|L_1|EQU|000f|
+001f|L_2|EQU|001f|
+0001|null|ORG|$1|
+0001|null|DB|%10000000|
+0002|null|DC.B|@53|
+0003|null|FCB|$0A|
+0004|null|DW|$F|
+0006|null|DC.W|100|
+0008|null|FDB|$0003|
+000a|null|DS.B|$A|
+0014|null|RMB|$F|
+0023|null|DS|$2|
+0025|null|DS.W|$A|
+0039|null|RMW|$5|
+0043|null|LDAA|L_2|
+0046|null|FCC|"HOLA JOSE"|
+004f|null|END|null|

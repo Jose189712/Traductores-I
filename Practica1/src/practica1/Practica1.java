@@ -5,41 +5,86 @@ de lenguaje ensamblador.*/
 
 package practica1;
 
+import com.sun.javafx.geom.transform.BaseTransform;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
+import javax.swing.JOptionPane;
 
 /**
  *Jose Rodriguez Sanchez
  *Luis Enrique Vazquez Lopez 
  */
 public class Practica1 {
-
-    int Nlinea=0;//Variable global para saber en que linea vamos
+    private static boolean org;//Variable para validar que solo haya un ORG
+    static int Nlinea=0;//Variable global para saber en que linea vamos
+    private static int CONTLOCK;
+    static boolean error;
+    //CONSTRUCTOR DE LA CLASE
+    public Practica1(){
+        org = false;
+        CONTLOCK = 0;
+        error = true;
+    }//fin del constructor de la clase
+    
+//METODOS GET Y SET PARA EL ATRIBUTO ORG
+    /**
+     * Método usado para la obtencion del valor booleano de org
+     * @return 
+     */
+    public static boolean isOrg() {
+        return org;
+    }//fin del método para obtener el booleano de org
+    /**
+     * Método para asignar un valor booleano a org
+     * @param org 
+     */
+    public static void setOrg(boolean org) {
+            Practica1.org = org;
+    }//Fin del método de establecer de org
+//FIN DE LOS MÉTODOS GET Y SET DEL ATRIBUTO ORG
+    
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        //DECLARACION DE VARIABLES
+       long inicio = System.nanoTime();
+       //DECLARACION DE VARIABLES
        String[] arregloCodigos = new String[3];//Arreglo para guardar los 3 codigos ETIQUETA-CODOPS-OPERANDOS  
-       int opcion=59;//Varaible para las opciones del switch
+       ArrayList<String[]> auxTabop = new ArrayList<>();
+       ArrayList<String[]> temporal = new ArrayList<>();//Array list para alamcenar los datos y despues crear el archivo temporal
+       ArrayList<String[]> tabsim = new ArrayList<>();//ArrayList para almacenar las etiqeutas del tabsim
+       int opcion;//Varaible para las opciones del switch
        String guardarLinea;//String para guardar cada linea
        Practica1 practica1 = new Practica1();//objeto de la clase, para instanciar y mandar llamar metodos de la misma clase
-       int posCodigo=0,Nlinea=0;       
-       //Instrucciones para abrir el archivo
-       File archivo = new File("P1ASM.txt");
-                    
+       int posCodigo=0,busqueda;//Variable busqueda -1 si no encontro el dato, 1 si se encontro el dato
+       boolean instMal = true;
+       
+       //Instrucciones para abrir el archivo       
+       File archivo = new File("P3ASM.txt");
+       File archivo1 = new File("Tabop.txt");
        //if para buscar si el archivo existe
-       if((archivo.exists())!=true){
-           System.out.println("El archivo no existe");
+       if(((archivo.exists())!=true) || ((archivo1.exists())!=true)){
+           System.out.println("El archivo no existe: Archivo de codigo o Tabop");
        }else{
-            //Instrucciones para manejar el contenido del archivo
+           
+            //Instrucciones para manejar el contenido del archivo            
             FileReader practica = new FileReader(archivo);
             BufferedReader asm = new BufferedReader(practica);
-                     
+            //Fin de las instrucciones para leer el archivo ensamblador
+            /*Bloque de instrucciones para cargar las instrucciones del tabop*/
+            FileReader instruccion = new FileReader(archivo1);//Leer
+            BufferedReader asm1 = new BufferedReader(instruccion);//almacena
+            auxTabop=practica1.almacenarTabop(asm1);//
+            instruccion.close();
+            /*Termino del bloque para para cargar el tabop*/
+                                             
        while((guardarLinea = asm.readLine())!=null){                //While para leer linea por linea
            Nlinea++;//Contador para conocer el numero de linea en el que estamos
          practica1.limpiarArreglo(arregloCodigos);//Instruccion para limpiar el arreglo
-           if(guardarLinea.length()>0){//if para ignorar los saltos de linea sin instrucciones   
+           
+         if(guardarLinea.length()>0){//if para ignorar los saltos de linea sin instrucciones   
                
               if((opcion=practica1.leerCadena(guardarLinea))!=0){//if para ignorar los saltos de linea pero que tengan espacios o tabuladores                        
                 opcion = guardarLinea.codePointAt(0);//Se obtiene el identificador en codigo ascii del primer caracter
@@ -55,45 +100,118 @@ public class Practica1 {
                    break;
                case 32://Caso para cuando la linea comienza con espacios 
                    practica1.recorrerEspacios(arregloCodigos, guardarLinea, posCodigo);   
-                   practica1.imprimir(arregloCodigos);
+                   practica1.imprimir(arregloCodigos);                   
                    break;
                case 9://Caso para cuando la linea comienza con tabuladores
                    practica1.recorrerEspacios(arregloCodigos, guardarLinea, posCodigo);
-                   practica1.imprimir(arregloCodigos);
+                   practica1.imprimir(arregloCodigos);                   
                    break;                                                  
-               case 0://Caso para cuando la linea solo es espacios y/o tabuladores con un enter
-                   opcion = 59;//Asignacion para controlar que no se imprima nadaya que no existen instrucciones
+               case 0://Caso para cuando la linea solo es espacios y/o tabuladores con un enter                  
                    break;
                default://El caso por default es cuando la linea comienza con cualquier caracter que no sea espacio o tabulador
                    practica1.etiqueta(arregloCodigos, guardarLinea, posCodigo);                   
-                   practica1.imprimir(arregloCodigos);
+                   practica1.imprimir(arregloCodigos);                   
                    break;
            }//Fin del switch
               
             //If que hara salir del ciclo si se encontro la palabra end
-            if(practica1.comparar(arregloCodigos, "end", 1)==true){
+            if(practica1.comparar(arregloCodigos, "end", 1)==true){                
+                practica1.almacenarDatos(temporal, tabsim, arregloCodigos);//Llamada al metodo para que almacena los datos en temporal o tabsim
                 break;
             }//Fin del if para salir del ciclo
-                                
+            
+            //if hara que busque el codigo o no
+            if(!"null".equals(arregloCodigos[1])){
+                
+                if((busqueda = practica1.buscarCodop(auxTabop, arregloCodigos[1]))>=0){//If en el que entra si se encontro el codigo de operacion                    
+                  if(false==isOrg())
+                  {//Incio del if para validar que no haya instrucciones antes del org     
+                      error = false;
+                      JOptionPane.showMessageDialog(null, "Error existen instrucciones antes de la directiva ORG linea: "+Nlinea);
+                      break;
+                  }else{//Inicio del else si detecto que las instrucciones estan despues de la directiva ORG
+                    if(practica1.operandoORNOToperando(auxTabop, busqueda, arregloCodigos)==true){
+                        if(arregloCodigos[2].equals("null"))
+                        {//If para validar los codigos de operacion inherentes
+                            System.out.println(arregloCodigos[1]+"  "+arregloCodigos[2]+" inherentes, "+auxTabop.get(busqueda)[5]+" bytes\n");                                                        
+                            practica1.almacenarDatos(temporal, tabsim, arregloCodigos); 
+                            Practica1.addCONTOLOCK(Integer.valueOf(auxTabop.get(busqueda)[5]));
+                        }else
+                        {                           
+                            ModoDireccionamiento modo = new ModoDireccionamiento();
+                            modo.opcionesModos(modo.detectarDireccionamiento(arregloCodigos),arregloCodigos);
+                            if(modo.isError())
+                            {                                
+                                practica1.almacenarDatos(temporal, tabsim, arregloCodigos);
+                                practica1.imprimirDatosModo(auxTabop, modo.getModo(), arregloCodigos, modo.getTamaño(), busqueda);                                
+                            }else
+                            {
+                                error = modo.isError();
+                            }
+                        }//Fin del else si el modo de direccionamiento no es relativo                        
+                    }//Fin del if               
+                  }//Fin del else cuando exista una instruccion despues de la directiva ORG
+                }else{                                                     
+                      if(arregloCodigos[1].toLowerCase().equals("org") && isOrg())
+                      {//Inicio del if isORG #1.0
+                          JOptionPane.showMessageDialog(null, "ERROR Se ha encontrado otra directiva ORG Linea: "+Nlinea);                          
+                          error = false;                                                 
+                      }else//Fin del if #1.0 e inicio del else
+                      {       if(false==isOrg() && !"org".equals(arregloCodigos[1].toLowerCase()) && !"equ".equals(arregloCodigos[1].toLowerCase()))                                            
+                                {//If para validar que no haya directivas antes de la instruccion ORG
+                                    error = false;
+                                    JOptionPane.showMessageDialog(null, "ERROR ¡Existen directivas antes de ORG y no son EQU! linea: "+Nlinea);
+                                }else
+                                {//Inicio del else si es el caso de que si haya habido un ORG antes de ciertas directivas
+                                    Directivas directiva = new Directivas();
+                                    directiva.directivasConstantes(directiva.directivas(arregloCodigos),arregloCodigos);                                        
+                                    if(directiva.isError())
+                                    {                                  
+                                        practica1.almacenarDatos(temporal, tabsim, arregloCodigos);                                  
+                                        Practica1.addCONTOLOCK(directiva.getIncremento());  //Llamada al método para añadir al contador de localidades                                 
+                                    }else
+                                    {      
+                                        error = directiva.isError();
+                                        //break;
+                                    }
+                                }//Fin del else "validar directivas antes del ORG"                                                          
+                      }//Fin del else que resulto del if de isORG   #1.0                                                            
+                }//Fin del if else
+            }//fin del if             
         }//fin del if que condiciona e ignora el que haya un salto de linea                   
           
        }//Fin del while
             practica.close();//Instruccion para cerrar el archivo
-       }//fin del if else para saber si el archivo existe
+            
+            //BLOQUE IF POR SI EXISTE UN ERROR NO ALMACENAR NADA EN EL ARCHIVO TEMPORAL NI EN TABSIM            
+            if(error)
+            {//If para no guardar en los archivos auxiliares si ha ocurrido un error #1.0-error
+                practica1.guardarArchivos(temporal, new File("P2tmp.txt"));
+                if(tabsim.size()>0)
+                {//Este if valida que se haya almacenado algun dato en la estructura para poder almacenar en el archivo #1.1
+                    practica1.guardarArchivos(tabsim, new File("TABSIM.txt"));
+                }//Fin del if #1.1
+            }//fin del if #1.0-error
+            
+     }//fin del if else para saber si el archivo existe
+       long fin = System.nanoTime();
+       double dif = (double)(fin-inicio) * 1.0e-9;
+        System.out.println("El programa dura "+dif+" segundos");
     }//Fin del main
     
     
     
-    
+    /*----------------------------------------------------------------------------------------------------------------------------------*/
+    //                              PRACTICA #1
     /**
-     * 
+     * Método para comparar un codigo de un arreglo contra otro mandado como String
      * @param codigos
      * @param x
      * @param posicion
      * @return 
      */
     public boolean comparar(String[] codigos, String x, int posicion){
-        if(codigos[posicion]!=null && codigos[posicion].toLowerCase().equals(x)){
+        if(codigos[posicion].toLowerCase().equals(x) && !"null".equals(codigos[posicion])){
             return true;
         }else{
             return false;
@@ -105,7 +223,7 @@ public class Practica1 {
      */
     public void imprimir(String[] codigos){        
         if(codigos[1].equals("null")){
-            System.out.println("!!!Error¡¡¡ No tiene codigo de operacion o contiene un error");
+            System.out.println("!!!Error¡¡¡ No tiene codigo de operacion o contiene un error\n");
         }//Fin del if que revisa y manda un mensaje si no hay codigo de operacion
         else{
             //Instrucciones para imprimir lo que se pide
@@ -115,7 +233,7 @@ public class Practica1 {
         }//fin del else
     }//Fin del método para imprimir
     /**
-     * 
+     * Método para verificar las lineas que no contienen instrucciones y solo tienen espacios
      * @param revision
      * @return 
      */
@@ -158,7 +276,7 @@ public class Practica1 {
         }//fin del for
         
         if(numeroError!=0){//Este if evalua cuantos ; tiene de mas
-            System.out.println("!!!ERROR, El comentario tiene "+numeroError+" ; de mas");// Este print te dice por cuanto se paso el comentario
+            System.out.println("!!!ERROR, El comentario tiene "+numeroError+" ; de mas en la linea: " + Nlinea);// Este print te dice por cuanto se paso el comentario
         }//fin del if
     }//Fin del matodo analizarComentario
     /**
@@ -173,20 +291,25 @@ public class Practica1 {
             for(int i = 0; i<lineaArchivo.length(); i++){//Recorre las posiciones de la cadena
                 if(lineaArchivo.codePointAt(i)!=32 && lineaArchivo.codePointAt(i)!=9){//codepointat convierte un caracter a codigo ASCII, el 32 es espacio.
                     reducirLinea = lineaArchivo.substring(i);//cuando dectecto un caracter diferente a espacio, almacena de hay en adelante
-                        if(posCodigo==1){//Este if se activa cuando es un codigo de operacion
+                    switch (posCodigo) {
+                        case 1:
+                            //Este if se activa cuando es un codigo de operacion
                             //Mandar llamar método de CODOP
                             codigoOperacion(codigos, reducirLinea, posCodigo);//
-                        }else if(posCodigo==2){//Se activa cuando es un operando
-                            //Mandar llamar método de Operando                            
+                            break;
+                        case 2:
+                            //Se activa cuando es un operando
+                            //Mandar llamar método de Operando
                             operando(codigos, reducirLinea, posCodigo);
-                        }else{
-                            System.out.println("Ha escrito instrucciones de mas");
-                        }//Fin del if else
+                            break;
+                        default:
+                            System.out.println("Ha escrito instrucciones de mas\n");
+                            break; //Fin del if else
+                    }//Fin del switch
                     break;
-                }//Fin del if                                 
-                
-                if((lineaArchivo.length()-1)==i){//Como dice el documento despues de la ultima instruccion solo debe de haber retorno de carro
-                    System.out.println("¡¡¡ERROR!!! Existen espacios despues de la ultima instruccion de la linea");
+                }//Fin del if                                                 
+                if((lineaArchivo.length()-1)==i){//Como dice el documento despues de la ultima instruccion solo debe de haber retorno de carro                    
+                    System.out.println("¡¡¡ERROR!!! Existen espacios despues de la ultima instruccion de la linea: "+Nlinea+"\n");
                 }//fin del if para validar cuando haya espacios y se haya terminado la linea                                 
             }//Fin del for 
             
@@ -204,7 +327,7 @@ public class Practica1 {
         
         //If para saber si el caracter es una letra mayuscula o minuscula
             if((primerLetra < 65 || primerLetra > 90) && (primerLetra < 97 || primerLetra > 122)){
-                System.out.println("El caracter inicial de la etiqueta es incorrecto");
+                System.out.println("El caracter inicial de la etiqueta es incorrecto. Linea: "+Nlinea+"\n");
             }//Fin del if     
             
         for(int i = 0; i<lineaArchivo.length(); i++){//inicio del for para recorrer caracter por caracter
@@ -212,11 +335,11 @@ public class Practica1 {
             if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1)==i){//para salirnos del método y del ciclo cuando se detecte un espacio o el fin de la linea
                 
                 if(etiqueta.length()>8){//if para determinar si se paso del limite de longitud
-                    System.out.println("La etiqueta ha sobre pasado el limite de caracteres");
+                    System.out.println("La etiqueta ha sobre pasado el limite de caracteres. Linea: "+Nlinea+"\n");
                 }//fin del if etiqueta>8
                 
                 if(caracterInvalido>0){//if que toma el contador "caracterInvalido" para mandar uun mensaje si fue aumentado
-                    System.out.println("La etiqueta tiene caracteres invalidos");
+                    System.out.println("La etiqueta tiene caracteres invalidos. Linea: "+Nlinea+"\n");
                 }//fin del if caracterinvalido > 0
                 
                 if((lineaArchivo.length()-1)==i){//
@@ -263,23 +386,27 @@ public class Practica1 {
                     
                     //If para saber si el caracter es una letra mayuscula o minuscula
                     if((primerLetra < 65 || primerLetra > 90) && (primerLetra < 97 || primerLetra > 122)){
-                        System.out.println("El caracter inicial del codigo de opercaion es incorrecto");
+                        error = false;
+                        System.out.println("El caracter inicial del codigo de opercacion es incorrecto. Linea: "+Nlinea+"\n");
                         // codigos[posCodigo] = "null";
                         break;//Instruccion para salir del método ya que no tiene caso buscarlo en el tabop porque no se encontrara
                     }//Fin del if 
                     
                     else if(Npuntos>1){//If para mandar un mensaje si se excedio del numero de puntos
-                        System.out.println("Codigo de operacion incorrecto por exceso de puntos");
+                        error = false;
+                        System.out.println("Codigo de operacion incorrecto por exceso de puntos. Linea: "+Nlinea+"\n");
                         break;
-                    }//Fin del if que condiciona el numero de puntos                    
+                    }//Fin del if que condiciona el numero de puntos                   
                     
                     else if(caracterDistinto!=0){//if para mandar un mensaje si existe un caracter diferente a una letra o un punto
-                        System.out.println("A ingresado un caracter incorrecto en el codigo de operacion");
+                        error = false;
+                        System.out.println("A ingresado un caracter incorrecto en el codigo de operacion. Linea: "+Nlinea+"\n");
                         break;
                     }//Fin del if
                     
                     else if(codigoOperacion.length()>5){//if para saber si se excedio del limite de caracteres
-                        System.out.println("Se excedio en los caracteres del codigo de operacion"); 
+                        error = false;
+                        System.out.println("Se excedio en los caracteres del codigo de operacion. Linea: "+Nlinea+"\n"); 
                         break;
                     }//Fin del if                 
                             
@@ -315,26 +442,425 @@ public class Practica1 {
      * @param posCodigo 
      */
     public void operando(String[] codigos, String lineaArchivo, int posCodigo){        
-        String operando="", reducirLinea;//variable donde se guardara el operando
+        String operando="", reducirLinea;//variable donde se guardara el operando        
         
-        for(int i = 0; i<lineaArchivo.length(); i++){            
+        if(lineaArchivo.substring(0,1).equals("\"") && codigos[1].toLowerCase().equals("fcc"))
+        {//Inicio del if para validar si se ha ingresado la diorectiva fcc y una cadena de texto
+            codigos[2] = lineaArchivo;
+        }else
+        {
+            for(int i = 0; i<lineaArchivo.length(); i++){            
             
-            if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1) == i){                                
-                
-                if((lineaArchivo.length()-1)==i){//Sirve para concatenar de manera correcta todo el codigo
-                    operando += lineaArchivo.substring(i);
+            if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9) || (lineaArchivo.length()-1) == i){                                                
+                if((lineaArchivo.codePointAt(i)==32 || lineaArchivo.codePointAt(i)==9)){//Sirve para concatenar de manera correcta todo el codigo                                        
+                    reducirLinea = lineaArchivo.substring(i);
+                    recorrerEspacios(codigos, reducirLinea, posCodigo);                    
                 }//Fin del if 
-                else{
-                reducirLinea = lineaArchivo.substring(i);
-                recorrerEspacios(codigos, reducirLinea, posCodigo);
-                }//fin del else
-                
+                else if((lineaArchivo.length()-1)==i){                    
+                    operando += lineaArchivo.substring(i);
+                }//fin del else                
                 codigos[posCodigo] = operando;
                 break;
             }//fin del if
             operando += lineaArchivo.substring(i, i+1);
         }//fin del for para guardar el operando
+       }//Fin del else para seguir con las instrucciones si el operando no comienza con ""
+        
         
     }//Fin del método que detecta el operando de la linea
     
+    /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    //              |           PRACTICA #2
+    
+    
+    /**
+     * Método que nos ayuda a alamcenar el tabop en un arraylist
+     * @param tabop
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
+    protected ArrayList<String[]> almacenarTabop(BufferedReader tabop) throws FileNotFoundException, IOException{                
+        //DECALARACION DE LAS ESTRUCTURAS DE DATOS        
+        ArrayList<String[]> auxTabop = new ArrayList<>();
+        String palabra;   //Variable para guardar dato por dato        
+        
+        while((palabra = tabop.readLine())!=null){
+            StringTokenizer token = new StringTokenizer(palabra);//Declaracion del objeto para identificar los tokens 
+            String[] datos = new String[6];
+            for(int i = 0; i<6; i++){
+                datos[i] = token.nextToken();                
+            }//Fin del while para separar la linea 
+            auxTabop.add(datos);                       
+        }//Fin del while que nos permite leer linea por linea el archivo        
+        return auxTabop;
+    }//fin del método para llenar el arraylist con lo datos dados en el archivo tabop        
+    
+    /**
+     * Método para buscar donde comienza las instrucciones de un mismo codigo de operacion
+     * @param tabop
+     * @param codigo
+     * @return 
+     * Este es nuestro metodod buscador, usado para idetinficar el tabop
+     */
+    public int buscarCodop(ArrayList<String[]> tabop, String codigo){   
+        
+        for(int i = 0; i<tabop.size(); i++){   //Este for va recorriendo por linea
+            if(tabop.get(i)[0].equals(codigo)){   //ESte if compara lo de la 1° posicion con el codigo
+                return i;                    //Regresa en que posicion se lo encontro
+            }//fin del if 
+        }//fin del for 
+        
+        return -1;    //Si no lo encontro regresa 0
+        
+    }//Fin del método para buscar el codop
+    /**
+     * Método que nos ayuda a saber si el codigo de operacion lleva o no operando
+     * @param tabop
+     * @param posicion
+     * @param codigos
+     * @return 
+     */
+    public boolean operandoORNOToperando(ArrayList<String[]> tabop, int posicion, String[] codigos){
+        if(tabop.get(posicion)[1].equals("1") && !"null".equals(codigos[2])){            
+            return true;
+        }else if(tabop.get(posicion)[1].equals("0") && codigos[2].equals("null")){
+            return true;
+        }else if(tabop.get(posicion)[1].equals("0") && !"null".equals(codigos[2])){
+            System.out.println("¡¡¡ERROR!!! Esta instruccion no lleva operando. Linea: "+Nlinea+"\n");
+            return false;
+        }else{
+            System.out.println("¡¡¡ERROR!!! Esta instruccion si lleva operando. Linea: "+Nlinea+"\n");
+            return false;
+        }//Fin del if else if
+    }//Fin del método 
+
+//--------------------------------------------------Practica #3-----------------------------------------------------------------
+    /**
+     * Método para obtener la posicion del codigo de operacion relacionado a su modo de direccionmiento
+     * @param tabop
+     * @param comienzo
+     * @param codop
+     * @param modo
+     * @return 
+     */
+    protected int almacenCoDirecc(ArrayList<String[]> tabop, int comienzo, String codop, String modo){
+        int retorno = -1;
+        for(int i = comienzo; i<tabop.size(); i++)
+        {//inicio del for 
+            if(tabop.get(i)[0].equals(codop) && tabop.get(i)[2].equals(modo))
+            {//inicio del if
+                retorno = i;
+            }//Fin del if para buscar y saber el codigo de operacion correcto relacionado a su modo de direccionamiento
+        }//fin del for
+        return retorno;
+    }//Fin del método que me regresara el especifico codigo de operacion dependiendo el operando
+    /**
+     * 
+     * @param tabop
+     * @param modo
+     * @param codigos
+     * @param tamaño
+     * @param comienzo 
+     */
+    protected void imprimirDatosModo(ArrayList<String[]> tabop, String modo, String[] codigos, String tamaño, int comienzo){
+        int posicionEspecifica;
+        switch(modo)
+        {//Inicio del switch para revisar los diferentes modos
+            case "IMM":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" Inmediato "+tamaño+" bits, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    //JOptionPane.showMessageDialog(null, "numero"+getCONTLOCK());                    
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                                        
+                break;
+            case "DIR":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" Directo, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "EXT":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" Extendido, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "REL":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" Relativo "+(Integer.valueOf(tabop.get(posicionEspecifica)[5])*4)+" bits, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5])*4);
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "IDX":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de "+tamaño+" bits, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "IDX1": 
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de "+tamaño+" bits, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "IDX2":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de "+tamaño+" bits, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "+IDX":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], "IDX");
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de pre incremento, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "-IDX":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], "IDX");
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de pre decremento, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                                
+                break;
+            case "IDX+":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], "IDX");
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de post incremento, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "IDX-":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], "IDX");
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de post decremento, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "[IDX2]":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado indirecto de 16 bits, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "[D,IDX]":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], modo);
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado indirecto de acumulador D, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+            case "IDXABD":
+                posicionEspecifica = almacenCoDirecc(tabop, comienzo, codigos[1], "IDX");
+                if(posicionEspecifica >= 0)
+                {
+                    System.out.println(codigos[1]+"  "+codigos[2]+" indizado de acumulador, "+tabop.get(posicionEspecifica)[5]+" bytes\n");
+                    addCONTOLOCK(Integer.valueOf(tabop.get(posicionEspecifica)[5]));
+                }else
+                {
+                    System.out.println("El operando no corresponde a ningun modo de direccionamiento de este codigo de operacion\n");
+                }//Fin del if else para verificar si existe modo de direccionamiento para el codigo de operacion                
+                break;
+        }//Fin del switch
+    }//Fin del método para imprimir los datos correctos
+//------------------------------------------------------PRACTICA #4----------------------------------------------------------------------
+    /**
+     * Método utilizado para obtener el valor del atributo CONTLOCK
+     * @return 
+     */
+    public static int getCONTLOCK() {
+        return CONTLOCK;
+    }//FIN DEL MÉTODO PARA OBTENER EL VALOR DE EL ATRIBUTO CONTLOCK
+    /**
+     * Este método es usado para asignarle un valor al atributo contlock que marcara las direcciones donde se almacenara el programa
+     * @param CONTLOCK 
+     */
+    public static void setCONTLOCK(int CONTLOCK) {    
+        Practica1.CONTLOCK = CONTLOCK;
+    }//FIN DEL MÉTODO PARA LA ASIGNACION DE UN VALOR A LA VARIABLE CONTLOCK
+    /**
+     * Este método le suma la cantidad enviada al contador de localidades 
+     * @param sumando 
+     */
+    protected static void addCONTOLOCK(int sumando){
+        ModoDireccionamiento operacion = new ModoDireccionamiento();
+        CONTLOCK += sumando;
+        if(CONTLOCK > 65535)
+        {//Inicio del if para validar el tamaño en memoria con el que se puede trabajar
+            JOptionPane.showMessageDialog(null, "ERROR ¡Se excedio el tamaño en memoria linea: "+Nlinea+"\n"
+                    + "0x"+operacion.converHexa(CONTLOCK));
+            error = false;
+        }//Fin del if para validar el tamaño
+    }//fin del método para sumarle al CONTLOCK    
+    /**
+     * Este método completa el numero con ceros que se necesiten para poder expresar la cifra con 2 bytes
+     * 
+     * 
+     * @param incompleto
+     * @return 
+     */
+    protected static String completarHexadecimal(String incompleto){
+        while(4>incompleto.length())
+        {//inicio del while para completar la cifra correctamente
+            incompleto = "0"+incompleto;
+        }//Fin del while para completar el numero
+        return incompleto;  //Retorno de la variable incompleto que en realidad la retorna completa
+    }//Fin del método para completar el numero hexadecimal
+    /**
+     * En este método lo utilizamos para organizar los datos para el archivo temporal y el tabsim en un arreglo
+     * @param codigos
+     * @param bandera
+     * @return 
+     */
+    protected String[] mandarArregloInst(String[] codigos,boolean bandera){
+        ModoDireccionamiento obtencion = new ModoDireccionamiento();//Instanciacion de objeto de la clase ModoDireccionamiento para hacer uso de varios métodos de ahi
+        String[] instcont;//Declaracion de objeto arreglo de strings 
+        if(bandera)
+        {//Inicio del if para almacenar datos que se guardaran en el archivo temporal
+            instcont = new String[codigos.length+1];
+            if(codigos[1].toLowerCase().equals("equ"))
+            { //Inicio del if en el cual si es igual a EQU se almacena el valor del ooperando en vez del contlock                
+                instcont[0] = codigos[2];
+                instcont[1] = codigos[0];
+                instcont[2] = codigos[1];
+                instcont[3] = codigos[2];
+            }else
+            {//Si no se cumple la condicion se almacenara el contlock----> Estas instrucciones son para el arhcivo temporal
+                instcont[0] = completarHexadecimal(obtencion.converHexa(getCONTLOCK()));
+                instcont[1] = codigos[0];
+                instcont[2] = codigos[1];
+                instcont[3] = codigos[2];
+            }//Fin del if (codigos[1].toLowerCase().equals("equ") else            
+        }else//Fin del if (bandera) e inicio del else ya que si la bandera es falsa quiere decir que se almacenaran datos en el archivo tabsim
+        {
+            instcont = new String[3];
+            if(codigos[1].toLowerCase().equals("equ"))
+            {//Inicio del if para guardar en el archivo tabsim si es equ se guarda una nota de que es "EQU"
+                instcont[0] = "EQU";
+                instcont[1] = codigos[0];
+                instcont[2] = codigos[2]; 
+            }else
+            {//Si la condicion no se cumple se guarda la nota que su valor sera el CONTLOCK
+                instcont[0] = "CONTLOCK";
+                instcont[1] = codigos[0];
+                instcont[2] = completarHexadecimal(obtencion.converHexa(getCONTLOCK()));
+            }//Fin del if(codigos[1].toLowerCase.equals("equ")) else                    
+        }//fin del else resultante del if (bandera)           
+        return instcont;
+    }//fin del método mandarArregloInst
+    /**
+     * Este método es utilizado para mandar a alamcenar los datos en un archivo temporal o en el tabsim
+     * @param temporal
+     * @param F
+     * @throws IOException 
+     */
+    protected void guardarArchivos(ArrayList<String[]> temporal, File F) throws IOException{
+        Archivos fichero = new Archivos();
+        fichero.openFile(F);
+        fichero.escribirArchivo(temporal);
+        fichero.cerrarArchivo();        
+    }//Fin del método guardarArchivos
+    /**
+     * Este método es utilizado para almacenar los datos en temporal o en tabsim si es caso 
+     * @param temporal
+     * @param tabsim
+     * @param codigos 
+     */
+    protected void almacenarDatos(ArrayList<String[]> temporal, ArrayList<String[]> tabsim, String[] codigos){
+        if(busquedaEtiqueta(tabsim, codigos[0])<0)
+        {//If para validar que no haya etiquetas iguales
+            temporal.add(mandarArregloInst(codigos,true));
+            if(!"null".equals(codigos[0]))
+            {//Inicio del if para almacenar datos en el tabsim #1
+                tabsim.add(mandarArregloInst(codigos, false));
+            }//Fin del if #1
+        }else
+        {//else que indica que si se encontro coincidencia
+            error = false;
+            JOptionPane.showMessageDialog(null, "ERROR ¡Etiqueta repetida! en linea: "+Nlinea);
+        }//Fin del if (busquedaEtiqueta(tabsim, codigos[0])<0) else
+    }//Fin del método almacenarDatos
+    /**
+     * 
+     * @param tabsim
+     * @param comparar
+     * @return 
+     */
+    protected int busquedaEtiqueta(ArrayList<String[]> tabsim, String comparar){
+        int retorno = -1;
+        for(int i = 0; i<tabsim.size(); i++)
+        {//Inicio del for para recorrer cada posicion del arraylist #2.tabsim
+            for(String get : tabsim.get(i))
+            {//Inicio del for loop
+                if(get.toLowerCase().equals(comparar.toLowerCase()))
+                {//Inicio del if para realizar la comparacion
+                   retorno = 1; 
+                }//Fin del if get.toLowerCase().equals(comparar.toLowerCase())
+            }//fin del for loop
+        }//Fin del for #2.tabsim
+        return retorno;
+    }//Fin del método busquedaEtiqueta
 }//Fin de la clase practica 1
+
+

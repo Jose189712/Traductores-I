@@ -1,0 +1,17 @@
+L_1 EQU 15
+L_2 EQU @37
+	ORG $1
+	DB %10000000
+ DC.B @53
+	FCB $0A
+ DW $F
+	DC.W	100
+ FDB		$0003
+	DS.B $A
+ RMB $F
+	DS $2
+ DS.W $A
+		RMW   $5
+	LDAA L_2
+ FCC "HOLA JOSE"
+ END
